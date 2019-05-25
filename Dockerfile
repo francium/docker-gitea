@@ -1,58 +1,73 @@
-EXPOSE 22 3000
+FROM alpine:3.9.3
 
+# PACKAGES #####################################################################
 RUN apk --no-cache add \
+    gawk \
     bash \
     ca-certificates \
-    curl \
-    gettext \
     git \
-    linux-pam \
     openssh \
-    s6 \
     sqlite \
-    su-exec \
-    tzdata
+    wget && \
+  update-ca-certificates
 
-RUN addgroup \
-    -S -g 1000 \
+# ENV ##########################################################################
+ENV GITEA_WORK_DIR=/gitea
+ENV USER git
+
+# USER AND GROUPS ##############################################################
+RUN \
+  addgroup \
+    -S \
+    -g 1000 \
     git && \
   adduser \
-    -S -H -D \
-    -h /data/git \
+    --system \
     -s /bin/bash \
-    -u 1000 \
     -G git \
+    -h $GITEA_WORK_DIR \
     git && \
   echo "git:$(dd if=/dev/urandom bs=24 count=1 status=none | base64)" | chpasswd
 
-RUN git clone --depth=1 https://github.com/go-gitea/gitea && \
-    cp -r gitea/docker/* / && \
-    rm -rf gitea
+# ARGS #########################################################################
+ARG ARCH=amd64
+ARG VERSION=1.8
 
-RUN apk update \
-    && apk add ca-certificates wget \
-    && update-ca-certificates
+# GET BINARY ###################################################################
+ENV GITEA_BINARY=gitea-$VERSION-linux-$ARCH
+ENV GITEA_DL_URL=https://dl.gitea.io/gitea/$VERSION/$GITEA_BINARY
 
-RUN wget https://dl.gitea.io/gitea/1.4.1/gitea-1.4.1-linux-arm-7 && \
-    sha256sum gitea-1.4.1-linux-arm-7 > downloaded.sha256
-RUN wget https://dl.gitea.io/gitea/1.4.1/gitea-1.4.1-linux-arm-7.sha256
+RUN wget $GITEA_DL_URL $GITEA_DL_URL.sha256
 
-RUN ls -lh
+# SHA256 sum is of the form 'HASH filename'. This will purge the filename so we don't
+# fail the build if the filename was different for some reason
+RUN awk '{ print $1 }' $GITEA_BINARY.sha256 > expected.sha256 && \
+    sha256sum $GITEA_BINARY | awk '{ print $1 }' > downloaded.sha256 && \
+    echo -ne "Downloaded binary's SHA256\n\t" && \
+    cat downloaded.sha256 && \
+    echo -ne "Expected SHA256\n\t" && \
+    cat expected.sha256
 
-# Verify the checksum
+# VERIFY THE CHECKSUM ##########################################################
 RUN echo "Validating checksum" && \
-    cmp downloaded.sha256 gitea-1.4.1-linux-arm-7.sha256
+    cmp downloaded.sha256 expected.sha256 && \
+    rm downloaded.sha256 expected.sha256 $GITEA_BINARY.sha256
 
-RUN mkdir -p /app/gitea && \
-    mv /gitea-1.4.1-linux-arm-7 /app/gitea/gitea && \
-    rm downloaded.sha256 gitea-1.4.1-linux-arm-7.sha256
+# CREATE DIRECTORIES ###########################################################
+RUN mkdir -p $GITEA_WORK_DIR $GITEA_WORK_DIR/etc/gitea && \
+    chown -R git:git $GITEA_WORK_DIR && \
+    chmod -R 750 $GITEA_WORK_DIR && \
+    ln -s $GITEA_WORK_DIR/etc/gitea /etc/gitea
 
-RUN chmod +x /app/gitea/gitea
+# MOVE BINARY ##################################################################
+RUN cp $GITEA_BINARY /usr/local/bin/gitea && \
+    chmod +x /usr/local/bin/gitea
 
-ENV USER git
-ENV GITEA_CUSTOM /data/gitea
+USER git
 
-VOLUME ["/data"]
+EXPOSE 22 3000
 
-ENTRYPOINT ["/usr/bin/entrypoint"]
-CMD ["/bin/s6-svscan", "/etc/s6"]
+VOLUME $GITEA_WORK_DIR
+
+ENTRYPOINT ["gitea"]
+CMD ["web", "-c", "/etc/gitea/app.ini"]
