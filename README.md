@@ -12,3 +12,11 @@ docker-compose.yml file make use of the `latest` tag by default.
 ```
 $ docker-compose up -d
 ```
+
+## Backup gitea data
+```
+$ docker-compose exec -it server /gitea/backup.sh
+```
+Where `server` is the name of the service running gitea.
+This will produce a timestamped zip file containing all the gitea data in the `./mount`
+directory in this repo.

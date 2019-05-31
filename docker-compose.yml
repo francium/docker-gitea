@@ -3,18 +3,13 @@ version: "3"
 volumes:
     gitea:
 
-networks:
-    gitea:
-        external: false
-
 services:
     server:
         image: francium/gitea:latest
         restart: always
-        networks:
-            - gitea
         ports:
             - "3000:3000"
             - "222:22"
         volumes:
             - gitea:/gitea
+            - ./mount:/mount

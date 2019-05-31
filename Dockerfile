@@ -17,10 +17,7 @@ ENV USER git
 
 # USER AND GROUPS ##############################################################
 RUN \
-  addgroup \
-    -S \
-    -g 1000 \
-    git && \
+  addgroup -S git && \
   adduser \
     --system \
     -s /bin/bash \
@@ -61,7 +58,13 @@ RUN mkdir -p $GITEA_WORK_DIR $GITEA_WORK_DIR/etc/gitea && \
 
 # MOVE BINARY ##################################################################
 RUN cp $GITEA_BINARY /usr/local/bin/gitea && \
+    rm $GITEA_BINARY && \
     chmod +x /usr/local/bin/gitea
+
+# Share directory for accessing backups
+RUN mkdir /mount
+VOLUME /mount
+COPY backup.sh $GITEA_WORK_DIR/backup.sh
 
 USER git
 
