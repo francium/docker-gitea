@@ -6,26 +6,26 @@
 from pprint import pprint as pp
 import requests as rq
 
-new_api_key = '8b9a9140a3482d61a1681bf5ec0a5ddeda6306cc'
+NEW_SERVER_API_KEY = 'XXXXXXXXXXXXXXX'
+NEW_SERVER_URL = 'https://XXXXXXXXXXX'
+NEW_SERVER_USER_API_URL = f'{NEW_SERVER_URL}/api/v1/user?access_token={NEW_SERVER_API_KEY}'
+NEW_SERVER_MIGRATE_API_URL = f'{NEW_SERVER_URL}/api/v1/repos/migrate?access_token={NEW_SERVER_API_KEY}'
 
-url_new_user_api = f'https://gojira2.fr.local/api/v1/user?access_token={new_api_key}'
+OLD_SERVER_API_KEY = 'XXXXXXXXXXXXXXX'
+OLD_SERVER_URL = 'https://XXXXXXXXXXX'
+OLD_SERVER_REPO_API_URL = f'{OLD_SERVER_URL}/api/v1/user/repos?access_token={OLD_SERVER_API_KEY}'
 
-print('Fetching user id from new api')
-user_id = rq.get(url_new_user_api).json()['id']
+print('Fetching user id from new server')
+user_id = rq.get(NEW_SERVER_USER_API_URL).json()['id']
 print(f'User id is {user_id}')
 
-old_api_key = 'd8f21b898cf31b24edc01a1b8e5151fdab7a7126'
-url_old_repos = f'https://gojira.fr.local/api/v1/user/repos?access_token={old_api_key}'
-
-url_new_migrate_api = f'https://gojira2.fr.local/api/v1/repos/migrate?access_token={new_api_key}'
-
-print('Getting list of old repos')
-old_repos = rq.get(url_old_repos).json()
+print('Getting list of repos from old server')
+old_repos = rq.get(OLD_SERVER_REPO_API_URL).json()
 
 for repo in old_repos:
     print(f'Processing: {repo["name"]}')
     j = {
-            'clone_addr': repo['clone_url'].replace('https://gojira.local', 'http://192.168.1.112:3000'),
+        'clone_addr': repo['clone_url']
         'description': repo['description'],
         'mirror': False,
         'private': repo['private'],
