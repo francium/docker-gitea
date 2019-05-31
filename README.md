@@ -14,6 +14,9 @@ $ docker-compose up -d
 ```
 
 ## Backup gitea data
+**Make sure `./mount` (in this repo) has permission set so that the script inside the
+container can write to it when it is mounted inside the container. `chmod 777 mount`
+should suffice.**
 ```
 $ docker-compose exec -it server /gitea/backup.sh
 ```
