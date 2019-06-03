@@ -8,8 +8,14 @@ RUN apk --no-cache add \
     git \
     openssh \
     sqlite \
+    tzdata \
     wget && \
   update-ca-certificates
+
+# Set timezone #################################################################
+RUN cp /usr/share/zoneinfo/Canada/Eastern /etc/localtime && \
+    echo "Canada/Eastern" > /etc/timezone && \
+    apk del tzdata
 
 # ENV ##########################################################################
 ENV GITEA_WORK_DIR=/gitea
