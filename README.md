@@ -28,6 +28,9 @@ interface) after first creating the docker container.
 ```
 Afterwards make sure to add your GPG key(s) via the user settings page.
 
+Note that we're using port 2222 for the SSH server since we're not running the
+process under the root user.
+
 
 ## Backup gitea data
 **Make sure `./mount` (in this repo) has permission set so that the script inside the
