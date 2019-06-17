@@ -9,7 +9,7 @@ services:
         restart: always
         ports:
             - "3000:3000"
-            - "222:22"
+            - "2222:2222"
         volumes:
             - gitea:/gitea
             - ./mount:/mount
