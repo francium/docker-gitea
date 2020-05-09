@@ -3,13 +3,24 @@ version: "3"
 volumes:
     gitea:
 
+networks:
+    fr-net:
+        external: true
+
 services:
     server:
         image: francium/gitea:latest
+        build: .
         restart: always
+        environment:
+            - VIRTUAL_HOST=gojira.fr.local
+            - VIRTUAL_PORT=3000
+        networks:
+            - fr-net
         ports:
-            - "3000:3000"
-            - "2222:2222"
+            # SSH port
+            - 2222:2222
         volumes:
             - gitea:/gitea
             - ./mount:/mount
+            - ./config/app.ini:/gitea/etc/gitea/app.ini
